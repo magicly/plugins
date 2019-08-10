@@ -57,7 +57,19 @@
                                 image:(UIImage *)image
                          imageQuality:(NSNumber *)imageQuality {
   NSDictionary *metaData = info[UIImagePickerControllerMediaMetadata];
-  return [self saveImageWithMetaData:metaData
+
+  NSMutableDictionary *metadataAsMutable = [metaData mutableCopy];
+
+  //For EXIF Dictionary
+  NSMutableDictionary *EXIFDictionary = [[metadataAsMutable objectForKey:(NSString *)kCGImagePropertyExifDictionary]mutableCopy];
+  if(!EXIFDictionary) 
+    EXIFDictionary = [NSMutableDictionary dictionary];
+
+  [EXIFDictionary setObject:@"truthapp_xxx" forKey:(NSString*)kCGImagePropertyExifUserComment];
+  [metadataAsMutable setObject:EXIFDictionary forKey:(NSString *)kCGImagePropertyExifDictionary];
+  NSLog(@"metadata: %@", metadataAsMutable);
+
+  return [self saveImageWithMetaData:metadataAsMutable
                                image:image
                               suffix:kFLTImagePickerDefaultSuffix
                                 type:kFLTImagePickerMIMETypeDefault
