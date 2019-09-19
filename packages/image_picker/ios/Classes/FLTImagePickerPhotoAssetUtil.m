@@ -65,9 +65,8 @@
   if(!EXIFDictionary) 
     EXIFDictionary = [NSMutableDictionary dictionary];
 
-  [EXIFDictionary setObject:@"truthapp_xxx" forKey:(NSString*)kCGImagePropertyExifUserComment];
+  [EXIFDictionary setObject:@"truth_ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" forKey:(NSString*)kCGImagePropertyExifUserComment];
   [metadataAsMutable setObject:EXIFDictionary forKey:(NSString *)kCGImagePropertyExifDictionary];
-  NSLog(@"metadata: %@", metadataAsMutable);
 
   return [self saveImageWithMetaData:metadataAsMutable
                                image:image
@@ -96,6 +95,66 @@
            orientation:
                [FLTImagePickerMetaDataUtil
                    getNormalizedUIImageOrientationFromCGImagePropertyOrientation:orientation]];
+
+
+  CGContextRef ctx;
+  CGImageRef imageRef = [newImage CGImage];
+  NSUInteger width = CGImageGetWidth(imageRef);
+  NSUInteger height = CGImageGetHeight(imageRef);
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  unsigned char *rawData = malloc(height * width * 4);
+  NSUInteger bytesPerPixel = 4;
+  NSUInteger bytesPerRow = bytesPerPixel * width;
+  NSUInteger bitsPerComponent = 8;
+  CGContextRef context = CGBitmapContextCreate(rawData, width, height,
+                                                bitsPerComponent, bytesPerRow, colorSpace,
+                                                kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+  CGColorSpaceRelease(colorSpace);
+  CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
+  CGContextRelease(context);
+
+  int byteIndex = 0;
+  int SIG_WIDTH = 8;
+  int byteIndex2 = (height - SIG_WIDTH) * width * 4;
+  // top & bottom
+  for (int ii = 0 ; ii < width * SIG_WIDTH ; ++ii) {
+      rawData[byteIndex] = (char) (arc4random() % 255);
+      rawData[byteIndex+1] = (char) (arc4random() % 255);
+      rawData[byteIndex+2] = (char) (arc4random() % 255);
+
+      rawData[byteIndex2] = (char) (arc4random() % 255);
+      rawData[byteIndex2+1] = (char) (arc4random() % 255);
+      rawData[byteIndex2+2] = (char) (arc4random() % 255);
+
+      byteIndex += 4;
+      byteIndex2 += 4;
+  }
+    // left && right
+  for (int ii = 0 ; ii < height ; ++ii) {
+    for (int j = 0 ; j <  SIG_WIDTH ; ++j) {
+      int leftIndex = (width * ii + j) * 4;
+      rawData[leftIndex] = (char) (arc4random() % 255);
+      rawData[leftIndex+1] = (char) (arc4random() % 255);
+      rawData[leftIndex+2] = (char) (arc4random() % 255);
+
+      int rightIndex = (width * (ii + 1) - SIG_WIDTH + j) * 4;
+      rawData[rightIndex] = (char) (arc4random() % 255);
+      rawData[rightIndex+1] = (char) (arc4random() % 255);
+      rawData[rightIndex+2] = (char) (arc4random() % 255);
+    }
+  }
+  
+  ctx = CGBitmapContextCreate(rawData,
+                              CGImageGetWidth( imageRef ),
+                              CGImageGetHeight( imageRef ),
+                              8,
+                              CGImageGetBytesPerRow( imageRef ),
+                              CGImageGetColorSpace( imageRef ),
+                              kCGImageAlphaPremultipliedLast );
+  imageRef = CGBitmapContextCreateImage (ctx);
+  UIImage* rawImage = [UIImage imageWithCGImage:imageRef];
+  CGContextRelease(ctx);
+  newImage = rawImage;
 
   NSData *data = [FLTImagePickerMetaDataUtil convertImage:newImage
                                                 usingType:type

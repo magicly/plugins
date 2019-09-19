@@ -232,6 +232,7 @@ static const int SOURCE_GALLERY = 1;
 - (void)imagePickerController:(UIImagePickerController *)picker
     didFinishPickingMediaWithInfo:(NSDictionary<NSString *, id> *)info {
   NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
+  NSURL *imageURL = [info objectForKey:UIImagePickerControllerImageURL];
   [_imagePickerController dismissViewControllerAnimated:YES completion:nil];
   // The method dismissViewControllerAnimated does not immediately prevent
   // further didFinishPickingMediaWithInfo invocations. A nil check is necessary
@@ -242,6 +243,9 @@ static const int SOURCE_GALLERY = 1;
   }
   if (videoURL != nil) {
     self.result(videoURL.path);
+    self.result = nil;
+  } else if (imageURL != nil) {
+    self.result(imageURL.path);
     self.result = nil;
   } else {
     UIImage *image = [info objectForKey:UIImagePickerControllerEditedImage];
