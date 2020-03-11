@@ -82,6 +82,27 @@
   return [self saveImageWithMetaData:metaData gifInfo:gifInfo path:path];
 }
 
+// 给图片添加图片水印
++ (UIImage *)addWaterImageWithImage:(UIImage *)image waterImage:(UIImage *)waterImage {
+    
+    //1.获取图片
+    
+    //2.开启上下文
+    UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
+    //3.绘制背景图片
+    [image drawInRect:CGRectMake(0, 0, image.size.width, image.size.height)];
+    //绘制水印图片到当前上下文
+    // [waterImage drawInRect:rect];
+    [waterImage drawInRect:CGRectMake(image.size.width - 200, image.size.height - 200, waterImage.size.width, waterImage.size.height)];
+    // [waterImage drawInRect:CGRectMake(0, 0, 100, 100)];
+    //4.从上下文中获取新图片
+    UIImage * newImage = UIGraphicsGetImageFromCurrentImageContext();
+    //5.关闭图形上下文
+    UIGraphicsEndImageContext();
+    //返回图片
+    return newImage;
+}
+
 + (NSString *)saveImageWithMetaData:(NSDictionary *)metaData
                               image:(UIImage *)image
                              suffix:(NSString *)suffix
@@ -89,6 +110,8 @@
                        imageQuality:(NSNumber *)imageQuality {
   CGImagePropertyOrientation orientation = (CGImagePropertyOrientation)[metaData[(
       __bridge NSString *)kCGImagePropertyOrientation] integerValue];
+  UIImage *waterImage = [UIImage imageNamed:@"truthlogo"];
+  image = [self addWaterImageWithImage:image waterImage:waterImage];
   UIImage *newImage = [UIImage
       imageWithCGImage:[image CGImage]
                  scale:1.0
