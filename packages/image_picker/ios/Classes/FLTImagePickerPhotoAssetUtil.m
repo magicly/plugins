@@ -55,7 +55,12 @@
 
 + (NSString *)saveImageWithPickerInfo:(nullable NSDictionary *)info
                                 image:(UIImage *)image
-                         imageQuality:(NSNumber *)imageQuality {
+                         imageQuality:(NSNumber *)imageQuality
+                            waterMark:(NSNumber *)waterMark {
+  if (waterMark.boolValue) {
+      UIImage *waterImage = [UIImage imageNamed:@"truthlogo"];
+      image = [self addWaterImageWithImage:image waterImage:waterImage];
+  }
   NSDictionary *metaData = info[UIImagePickerControllerMediaMetadata];
 
   NSMutableDictionary *metadataAsMutable = [metaData mutableCopy];
@@ -67,6 +72,9 @@
 
   [EXIFDictionary setObject:@"truth_ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" forKey:(NSString*)kCGImagePropertyExifUserComment];
   [metadataAsMutable setObject:EXIFDictionary forKey:(NSString *)kCGImagePropertyExifDictionary];
+  if (waterMark.boolValue) {
+    [metadataAsMutable removeObjectForKey:(NSString *)kCGImagePropertyOrientation];
+  }
 
   return [self saveImageWithMetaData:metadataAsMutable
                                image:image
@@ -82,26 +90,39 @@
   return [self saveImageWithMetaData:metaData gifInfo:gifInfo path:path];
 }
 
-// 给图片添加图片水印
-+ (UIImage *)addWaterImageWithImage:(UIImage *)image waterImage:(UIImage *)waterImage {
++ (UIImage *)addWaterImageWithImage:(UIImage *)origin waterImage:(UIImage *)template {
+    double width = origin.size.width;
+    double height = origin.size.height;
+    double width1 = template.size.width;
+    double height1 = template.size.height;
     
-    //1.获取图片
-    
-    //2.开启上下文
-    UIGraphicsBeginImageContextWithOptions(image.size, NO, 0);
-    //3.绘制背景图片
-    [image drawInRect:CGRectMake(0, 0, image.size.width, image.size.height)];
-    //绘制水印图片到当前上下文
-    // [waterImage drawInRect:rect];
-    [waterImage drawInRect:CGRectMake(image.size.width - 200, image.size.height - 200, waterImage.size.width, waterImage.size.height)];
-    // [waterImage drawInRect:CGRectMake(0, 0, 100, 100)];
-    //4.从上下文中获取新图片
-    UIImage * newImage = UIGraphicsGetImageFromCurrentImageContext();
-    //5.关闭图形上下文
+//     UIGraphicsBeginImageContext(CGSizeMake(height, width));
+    UIGraphicsBeginImageContext(origin.size);
+    [origin drawAtPoint:CGPointZero];
+    // [origin drawInRect:CGRectMake(0.0, 0.0, width, height)];
+    [template drawInRect:CGRectMake(width - width1 - 200, height - height1 - 200, width1, height1)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-    //返回图片
+    
     return newImage;
 }
+
++ (UIImage *)addWaterImageWithImage2:(UIImage *)image waterImage:(UIImage *)maskImage {
+    CGImageRef maskRef = maskImage.CGImage;
+    
+    CGImageRef mask = CGImageMaskCreate(CGImageGetWidth(maskRef),
+                                        CGImageGetHeight(maskRef),
+                                        CGImageGetBitsPerComponent(maskRef),
+                                        CGImageGetBitsPerPixel(maskRef),
+                                        CGImageGetBytesPerRow(maskRef),
+                                        CGImageGetDataProvider(maskRef), NULL, false);
+    
+    CGImageRef masked = CGImageCreateWithMask([image CGImage], mask);
+    
+    return [UIImage imageWithCGImage:masked];
+    
+}
+
 
 + (NSString *)saveImageWithMetaData:(NSDictionary *)metaData
                               image:(UIImage *)image
@@ -110,8 +131,6 @@
                        imageQuality:(NSNumber *)imageQuality {
   CGImagePropertyOrientation orientation = (CGImagePropertyOrientation)[metaData[(
       __bridge NSString *)kCGImagePropertyOrientation] integerValue];
-  UIImage *waterImage = [UIImage imageNamed:@"truthlogo"];
-  image = [self addWaterImageWithImage:image waterImage:waterImage];
   UIImage *newImage = [UIImage
       imageWithCGImage:[image CGImage]
                  scale:1.0

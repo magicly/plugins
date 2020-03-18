@@ -44,7 +44,8 @@ class ImagePicker {
       {@required ImageSource source,
       double maxWidth,
       double maxHeight,
-      int imageQuality}) async {
+      int imageQuality,
+      bool waterMark}) async {
     assert(source != null);
     assert(imageQuality == null || (imageQuality >= 0 && imageQuality <= 100));
 
@@ -62,7 +63,8 @@ class ImagePicker {
         'source': source.index,
         'maxWidth': maxWidth,
         'maxHeight': maxHeight,
-        'imageQuality': imageQuality
+        'imageQuality': imageQuality,
+        'waterMark': waterMark,
       },
     );
 

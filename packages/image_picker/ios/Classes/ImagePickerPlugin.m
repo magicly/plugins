@@ -256,6 +256,7 @@ static const int SOURCE_GALLERY = 1;
     NSNumber *maxWidth = [_arguments objectForKey:@"maxWidth"];
     NSNumber *maxHeight = [_arguments objectForKey:@"maxHeight"];
     NSNumber *imageQuality = [_arguments objectForKey:@"imageQuality"];
+    NSNumber *waterMark = [_arguments objectForKey:@"waterMark"];
 
     if (![imageQuality isKindOfClass:[NSNumber class]]) {
       imageQuality = @1;
@@ -272,7 +273,7 @@ static const int SOURCE_GALLERY = 1;
     PHAsset *originalAsset = [FLTImagePickerPhotoAssetUtil getAssetFromImagePickerInfo:info];
     if (!originalAsset) {
       // Image picked without an original asset (e.g. User took a photo directly)
-      [self saveImageWithPickerInfo:info image:image imageQuality:imageQuality];
+      [self saveImageWithPickerInfo:info image:image imageQuality:imageQuality waterMark:waterMark];
     } else {
       __weak typeof(self) weakSelf = self;
       [[PHImageManager defaultManager]
@@ -316,10 +317,12 @@ static const int SOURCE_GALLERY = 1;
 
 - (void)saveImageWithPickerInfo:(NSDictionary *)info
                           image:(UIImage *)image
-                   imageQuality:(NSNumber *)imageQuality {
+                   imageQuality:(NSNumber *)imageQuality
+                      waterMark:(NSNumber *)waterMark {
   NSString *savedPath = [FLTImagePickerPhotoAssetUtil saveImageWithPickerInfo:info
                                                                         image:image
-                                                                 imageQuality:imageQuality];
+                                                                 imageQuality:imageQuality
+                                                                    waterMark:waterMark];
   [self handleSavedPath:savedPath];
 }
 
